@@ -1,10 +1,19 @@
 using UserRegistrationApp.Components;
+using Microsoft.EntityFrameworkCore;
+using UserRegistrationApp.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+
+// Configure Entity Framework with SQLite
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+{
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
+});
 
 var app = builder.Build();
 
