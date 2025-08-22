@@ -1,10 +1,9 @@
-# User Registra+on Using Blazor and ASP.NET Core with En+ty
-Framework
+# User Registration Using Blazor and ASP.NET Core with Entity Framework
 
 
 ## Section A
 
-1. Create new Blazor App 
+1. Create a new Blazor App 
 
     ```bash
     dotnet new blazorserver -n UserRegistrationApp
@@ -24,9 +23,9 @@ Framework
     dotnet add package Microsoft.EntityFrameworkCore.Design
     ```
 
-    Here I choose SQLite, because of it's lightweight and development-friendly database 
+    Here I choose SQLite, because it's a lightweight and development-friendly database 
 
-3. Database configuration done by adding connection string to appsettings.json
+3. Database configuration done by adding a connection string to appsettings.json
 
     ```bash
     "ConnectionStrings": {
