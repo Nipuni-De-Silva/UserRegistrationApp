@@ -58,3 +58,137 @@ h1:focus {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+/* =================================== */
+/* CUSTOM USER REGISTRATION STYLES     */
+/* =================================== */
+
+/* Logo styling */
+.logo-image {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    background-color: rgb(255, 255, 255);
+    padding: 10px;
+}
+
+/* Custom styles for registration form */
+.card {
+    border: none;
+    border-radius: 15px;
+}
+
+.card-header {
+    border-radius: 15px 15px 0 0 !important;
+    background: linear-gradient(135deg, #F4A261 0%, #E76F51 100%) !important;
+}
+
+.form-control {
+    border-radius: 8px;
+    border: 2px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: #F4A261;
+    box-shadow: 0 0 0 0.2rem rgba(244, 162, 97, 0.25);
+}
+
+.btn-create-account {
+    background: linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-create-account:hover {
+    background: linear-gradient(135deg, #44A08D 0%, #4ECDC4 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(78, 205, 196, 0.4);
+    color: white;
+}
+
+.btn-create-account:focus {
+    box-shadow: 0 0 0 0.2rem rgba(78, 205, 196, 0.25);
+    color: white;
+}
+
+.btn-create-account:disabled {
+    background: #6c757d;
+    transform: none;
+    box-shadow: none;
+}
+
+.alert {
+    border-radius: 8px;
+    border: none;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.alert-success {
+    background-color: #d1e7dd;
+    color: #0f5132;
+}
+
+.input-group .btn {
+    border-radius: 0 8px 8px 0;
+    border-color: #e9ecef;
+}
+
+.input-group .btn:hover {
+    background-color: #F4A261;
+    border-color: #F4A261;
+    color: white;
+}
+
+/* Form labels with theme color */
+.form-label {
+    font-weight: 600;
+    color: #E76F51;
+    margin-bottom: 8px;
+}
+
+/* Support link styling */
+.text-decoration-none {
+    color: #F4A261 !important;
+    font-weight: 500;
+}
+
+.text-decoration-none:hover {
+    color: #E76F51 !important;
+    text-decoration: underline !important;
+}
+
+/* Animation for form elements */
+.form-control, .btn {
+    animation: slideInUp 0.5s ease-out;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Background theme */
+.bg-light {
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%) !important;
+}
+
+/* Card shadow with theme colors */
+.card.shadow-lg {
+    box-shadow: 0 1rem 3rem rgba(244, 162, 97, 0.175) !important;
+}
