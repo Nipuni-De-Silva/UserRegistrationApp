@@ -4,6 +4,7 @@ namespace UserRegistrationApp.Data
 {
     public class ApplicationDbContext : DbContext
     {
+        public DbSet<User> Users { get; set; }
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
@@ -11,8 +12,7 @@ namespace UserRegistrationApp.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            base.OnModelCreating(modelBuilder);
-            // Additional model configuration can go here
+            modelBuilder.Entity<User>().ToTable("Users");
         }
         
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
