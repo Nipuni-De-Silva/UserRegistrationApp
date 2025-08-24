@@ -1,8 +1,14 @@
 @page "/register"
 @using UserRegistrationApp.Data
+@using UserRegistrationApp.Models
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.Extensions.Logging
+@inject ILoggerFactory LoggerFactory
 @inject IJSRuntime JSRuntime
+@inject HttpClient Http
+@rendermode InteractiveServer
 
 <PageTitle>Create Account</PageTitle>
 
@@ -17,8 +23,9 @@
                     <h3><i class="fas fa-user-plus me-2"></i>Create Account</h3>
                 </div>
                 <div class="card-body p-4">
-                    <EditForm Model="@userModel" OnValidSubmit="@HandleValidSubmit">
+                    <EditForm Model="@userModel" OnValidSubmit="@HandleValidSubmit" FormName="RegisterForm" OnInvalidSubmit="@HandleInvalidSubmit">
                         <DataAnnotationsValidator />
+                        <ValidationSummary class="text-danger" />
                         
                         @if (!string.IsNullOrEmpty(errorMessage))
                         {
@@ -62,11 +69,12 @@
                                 <i class="fas fa-lock me-2"></i>Password
                             </label>
                             <div class="input-group">
-                                <InputText id="password" 
-                                         type="@(showPassword ? "text" : "password")" 
-                                         class="form-control" 
-                                         @bind-Value="userModel.Password" 
-                                         placeholder="Enter your password" />
+                                <input id="password" 
+                                       type="@(showPassword ? "text" : "password")" 
+                                       class="form-control" 
+                                       @bind="userModel.Password" 
+                                       @bind:event="oninput"
+                                       placeholder="Enter your password" />
                                 <button class="btn btn-outline-secondary" 
                                         type="button" 
                                         @onclick="TogglePasswordVisibility">
@@ -82,7 +90,7 @@
                         <div class="d-grid gap-2">
                             <button type="submit" 
                                     class="btn btn-create-account btn-md" 
-                                    disabled="@isSubmitting">
+                                    disabled="@(isSubmitting || !IsFormValid())">
                                 @if (isSubmitting)
                                 {
                                     <span class="spinner-border spinner-border-sm me-2" role="status"></span>
@@ -98,12 +106,7 @@
                     </EditForm>
 
                     <div class="my-2"></div>
-                    @*
-                    <div class="text-center">
-                        <p class="mb-0">Need help? 
-                            <a href="mailto:support@userregistrationapp.com" class="text-decoration-none">Contact Support</a>
-                        </p>
-                    </div> *@
+                    
                 </div>
             </div>
         </div>
@@ -111,54 +114,151 @@
 </div>
 
 @code {
-    private User userModel = new User();
+    private RegisterRequest userModel = new RegisterRequest();
     private string errorMessage = string.Empty;
     private string successMessage = string.Empty;
     private bool showPassword = false;
     private bool isSubmitting = false;
+    private bool pendingInvalidSubmitLog = false;
+    private ILogger _logger = null!;
+    private EditContext? editContext;
+    private bool isComponentRendered = false;
+
+    protected override void OnInitialized()
+    {
+        _logger = LoggerFactory.CreateLogger("RegisterComponent");
+        _logger.LogInformation("Register component initialized.");
+        editContext = new EditContext(userModel);
+        editContext.OnFieldChanged += (sender, args) => StateHasChanged();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            isComponentRendered = true;
+            StateHasChanged();
+        }
+
+        if (pendingInvalidSubmitLog && isComponentRendered)
+        {
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("console.log", 
+                    $"Invalid form state: Username={userModel.Username ?? "null"}, Email={userModel.Email ?? "null"}, PasswordLength={userModel.Password?.Length ?? 0}");
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning(ex, "Could not log to console during prerender");
+            }
+            pendingInvalidSubmitLog = false;
+            StateHasChanged();
+        }
+    }
 
     private void TogglePasswordVisibility()
     {
         showPassword = !showPassword;
+        _logger.LogInformation("Password visibility toggled. Now showing: {ShowPassword}", showPassword);
+        StateHasChanged(); // This is the key fix!
+    }
+
+    private bool IsFormValid()
+    {
+        return editContext?.Validate() ?? false;
     }
 
     private async Task HandleValidSubmit()
     {
         errorMessage = string.Empty;
         successMessage = string.Empty;
-        
-        if (string.IsNullOrWhiteSpace(userModel.Username) || 
-            string.IsNullOrWhiteSpace(userModel.Email) || 
-            string.IsNullOrWhiteSpace(userModel.Password))
-        {
-            errorMessage = "All fields are required.";
-            return;
-        }
-
         isSubmitting = true;
         StateHasChanged();
 
+        _logger.LogInformation("Submitting registration for email: {Email}, username: {Username}, password length: {PasswordLength}", 
+            userModel.Email ?? "null", userModel.Username ?? "null", userModel.Password?.Length ?? 0);
+
+        if (isComponentRendered)
+        {
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("console.log", 
+                    $"Form state: Username={userModel.Username}, Email={userModel.Email}, PasswordLength={userModel.Password?.Length ?? 0}");
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning(ex, "Could not log to console");
+            }
+        }
+
         try
         {
-            // Simulate processing delay
-            await Task.Delay(1500);
-            
-            // TODO: In Section C, we'll implement actual user registration logic
-            successMessage = $"Account created successfully! Welcome, {userModel.Username}!";
-            
-            // Reset form after successful registration
-            await Task.Delay(2000);
-            userModel = new User();
-            successMessage = string.Empty;
+            var request = new HttpRequestMessage(HttpMethod.Post, "api/user/register")
+            {
+                Content = JsonContent.Create(userModel)
+            };
+            _logger.LogInformation("Request payload: {Payload}", System.Text.Json.JsonSerializer.Serialize(userModel));
+
+            var response = await Http.SendAsync(request);
+            _logger.LogInformation("Registration request sent. Status Code: {StatusCode}", response.StatusCode);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<RegisterResponse>();
+                successMessage = result?.Message ?? "Account created successfully!";
+                _logger.LogInformation("Registration successful for username: {Username}", result?.Username);
+                await Task.Delay(2000);
+                userModel = new RegisterRequest();
+                editContext = new EditContext(userModel);
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                errorMessage = $"Registration failed: {error} (Status Code: {response.StatusCode})";
+                _logger.LogWarning("Registration failed with status code {StatusCode}: {Error}", response.StatusCode, error);
+                if (string.IsNullOrEmpty(error))
+                {
+                    _logger.LogWarning("No error message returned from server for status code {StatusCode}", response.StatusCode);
+                }
+            }
         }
         catch (Exception ex)
         {
-            errorMessage = $"Account creation failed: {ex.Message}";
+            errorMessage = $"Error: {ex.Message}";
+            _logger.LogError(ex, "Exception during registration");
         }
         finally
         {
             isSubmitting = false;
             StateHasChanged();
+            _logger.LogInformation("Registration process completed.");
         }
+    }
+
+    private async Task HandleInvalidSubmit()
+    {
+        _logger.LogWarning("Invalid form submission attempted. Username: {Username}, Email: {Email}, PasswordLength: {PasswordLength}", 
+            userModel.Username ?? "null", userModel.Email ?? "null", userModel.Password?.Length ?? 0);
+        
+        if (isComponentRendered)
+        {
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("console.log", 
+                    $"Invalid form state: Username={userModel.Username}, Email={userModel.Email}, PasswordLength={userModel.Password?.Length ?? 0}");
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning(ex, "Could not log to console during invalid submit");
+                pendingInvalidSubmitLog = true;
+            }
+        }
+        else
+        {
+            pendingInvalidSubmitLog = true;
+        }
+
+        errorMessage = "Please correct the errors in the form.";
+        StateHasChanged();
     }
 }

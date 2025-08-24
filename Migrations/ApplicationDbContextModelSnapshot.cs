@@ -46,6 +46,9 @@ namespace UserRegistrationApp.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Email")
+                        .IsUnique();
+
                     b.ToTable("Users", (string)null);
                 });
 #pragma warning restore 612, 618

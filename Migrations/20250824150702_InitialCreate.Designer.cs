@@ -11,7 +11,7 @@ using UserRegistrationApp.Data;
 namespace UserRegistrationApp.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250823111531_InitialCreate")]
+    [Migration("20250824150702_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -48,6 +48,9 @@ namespace UserRegistrationApp.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
 
                     b.ToTable("Users", (string)null);
                 });
