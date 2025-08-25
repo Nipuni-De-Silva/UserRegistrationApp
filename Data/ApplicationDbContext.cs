@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-
 namespace UserRegistrationApp.Data
 {
     public class ApplicationDbContext : DbContext
@@ -9,7 +8,6 @@ namespace UserRegistrationApp.Data
             : base(options)
         {
         }
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>().ToTable("Users");

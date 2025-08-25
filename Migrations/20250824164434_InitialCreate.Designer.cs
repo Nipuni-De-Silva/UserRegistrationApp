@@ -11,7 +11,7 @@ using UserRegistrationApp.Data;
 namespace UserRegistrationApp.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250824150702_InitialCreate")]
+    [Migration("20250824164434_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />

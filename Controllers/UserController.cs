@@ -7,6 +7,7 @@ using System.Text;
 using UserRegistrationApp.Components.Pages;
 using Microsoft.Extensions.Logging;
 using System.Linq.Expressions;
+using BCrypt.Net;
 
 namespace UserRegistrationApp.Controllers
 {
@@ -95,12 +96,7 @@ namespace UserRegistrationApp.Controllers
 
         private string HashPassword(string password)
         {
-            using (var sha256 = SHA256.Create())
-            {
-                var bytes = Encoding.UTF8.GetBytes(password);
-                var hash = sha256.ComputeHash(bytes);
-                return Convert.ToBase64String(hash);
-            }
+            return BCrypt.Net.BCrypt.HashPassword(password); // Use BCrypt for secure password hashing
         }
     }
 

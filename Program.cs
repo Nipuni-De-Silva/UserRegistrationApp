@@ -3,6 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using UserRegistrationApp.Data;
 using System.Net.Http;
 using Microsoft.Extensions.Logging;
+using UserRegistrationApp.Controllers;
+using Microsoft.AspNetCore.Identity;
+using UserRegistrationApp; // Add this if App.razor is in the root namespace
 
 var builder = WebApplication.CreateBuilder(args);
 
