@@ -13,32 +13,32 @@
 # Clone and Run the Project
 
 ## 1. Clone the Repository
-    ```bash
-    git clone https://github.com/Nipuni-De-Silva/UserRegistrationApp.git
-    ```
+```bash
+git clone https://github.com/Nipuni-De-Silva/UserRegistrationApp.git
+```
 
-    ```bash
-    cd UserRegistrationApp
-    ```
+```bash
+cd UserRegistrationApp
+```
 
 ## 2. Restore Dependencies
-    ```bash
-    dotnet restore
-    ```
+```bash
+dotnet restore
+```
 
 ## 3. Setup Database
-    ```bash
-    dotnet ef migrations add InitialCreate
-    ```
+```bash
+dotnet ef migrations add InitialCreate
+```
 
-    ```bash
-    dotnet ef database update
-    ```
+```bash
+dotnet ef database update
+```
 
 ## 4. Run the Application
-    ```bash
-    dotnet run
-    ```
+```bash
+dotnet run
+```
 
 ### application will be available at: http://localhost:5171
 
@@ -53,33 +53,34 @@ curl -X POST http://localhost:5171/api/user/register -H "Content-Type: applicati
 
 ## 1. Fork and Clone
 
-    ```bash
-    git clone https://github.com/Nipuni-De-Silva/UserRegistrationApp.git
-    ```
+```bash
+git clone https://github.com/Nipuni-De-Silva/UserRegistrationApp.git
+```
 
-    ```bash
-    cd UserRegistrationApp
-    ```
+```bash
+cd UserRegistrationApp
+```
 
 ## 2. Create a Feature Branch
 
-    ```bash
-    git checkout -b feature/your-branch-name
-    ```
+```bash
+git checkout -b feature/your-branch-name
+```
 
 ## 3. Make Changes
 
 ## 4. Commit Changes
 
-    ```bash
-    git add .
-    ```
+```bash
+git add .
+```
 
-    ```bash
-    git commit -m "Add Commit Message"
-    ```
+```bash
+git commit -m "Add Commit Message"
+```
 
 ## 5. Push and Create Pull Request
-    ```bash
-    git push origin feature/your-branch-name
-    ```
+
+```bash
+git push origin feature/your-branch-name
+```
