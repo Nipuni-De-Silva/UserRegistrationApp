@@ -1,41 +1,83 @@
 # User Registration Using Blazor and ASP.NET Core with Entity Framework
 
+### Secure user registration application built with ASP.NET Core Blazor Server and ASP.NET Core Identity.
 
-## Section A
+### Technology Srack
+#### Backend: ASP.NET Core 9.0
+#### Frontend: Blazor Server Compnent
+#### Database: SQLite with Entity Framework Core
+#### Authentication: ASP.NET Core Identity
 
-1. Create a new Blazor App 
+# Clone and Run the Project
 
+## 1. Clone the Repository
     ```bash
-    dotnet new blazorserver -n UserRegistrationApp
-    ```
-
-2. Entity Framework Integration with SQLite
-
-    ```bash
-    dotnet add package Microsoft.EntityFrameworkCore.Sqlite
-    ```
-
-    ```bash
-    dotnet add package Microsoft.EntityFrameworkCore.Tools
+    git clone https://github.com/Nipuni-De-Silva/UserRegistrationApp.git
     ```
 
     ```bash
-    dotnet add package Microsoft.EntityFrameworkCore.Design
+    cd UserRegistrationApp
     ```
 
-    Here I choose SQLite, because it's a lightweight and development-friendly database 
+## 2. Restore Dependencies
+    ```bash
+    dotnet restore
+    ```
 
-3. Database configuration done by adding a connection string to appsettings.json
+## 3. Setup Database
+    ```bash
+    dotnet ef migrations add InitialCreate
+    ```
 
     ```bash
-    "ConnectionStrings": {
-        "DefaultConnection": "Data Source=UserRegistrationApp.db"
-    }
+    dotnet ef database update
     ```
 
-4. Entity Framework configuration in Program.cs
+## 4. Run the Application
+    ```bash
+    dotnet run
+    ```
+
+### application will be available at: http://localhost:5171
+
+
+## API Endpoints
+
+```bash
+curl -X POST http://localhost:5171/api/user/register -H "Content-Type: application/json" -d '{"username":"testuser","email":"test@example.com","password":"Test@123"}'
+```
+
+# Contributing
+
+## 1. Fork and Clone
 
     ```bash
-    builder.Services.AddDbContext<ApplicationDbContext>(options => { options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));});
+    git clone https://github.com/Nipuni-De-Silva/UserRegistrationApp.git
     ```
 
+    ```bash
+    cd UserRegistrationApp
+    ```
+
+## 2. Create a Feature Branch
+
+    ```bash
+    git checkout -b feature/your-branch-name
+    ```
+
+## 3. Make Changes
+
+## 4. Commit Changes
+
+    ```bash
+    git add .
+    ```
+
+    ```bash
+    git commit -m "Add Commit Message"
+    ```
+
+## 5. Push and Create Pull Request
+    ```bash
+    git push origin feature/your-branch-name
+    ```
