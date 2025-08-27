@@ -5,7 +5,9 @@ using System.Net.Http;
 using Microsoft.Extensions.Logging;
 using UserRegistrationApp.Controllers;
 using Microsoft.AspNetCore.Identity;
-using UserRegistrationApp; // Add this if App.razor is in the root namespace
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using UserRegistrationApp; 
+using Microsoft.AspNetCore.Identity.UI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -53,6 +55,22 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.AddIdentity<User, IdentityRole>(options =>
+{
+    options.SignIn.RequireConfirmedAccount = false;
+    options.Password.RequireDigit = true;
+    options.Password.RequireLowercase = false;
+    options.Password.RequireUppercase = false;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequiredLength = 6;
+
+    // User settings
+    options.User.RequireUniqueEmail = true;
+    options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+ ";
+})
+    .AddEntityFrameworkStores<ApplicationDbContext>()
+    .AddDefaultTokenProviders();
+
 var app = builder.Build();
 
 // Log environment for debugging
@@ -75,10 +93,21 @@ else
 // app.UseHttpsRedirection();
 app.UseCors("AllowAll"); // Before UseRouting (optional, for testing)
 app.UseRouting();
+
+// Authentication and authorization middleware
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.UseAntiforgery();
 app.MapStaticAssets();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    context.Database.EnsureCreated();
+}
 
 app.Logger.LogInformation("Application starting in {Environment} environment.", app.Environment.EnvironmentName);
 

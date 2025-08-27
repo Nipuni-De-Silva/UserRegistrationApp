@@ -2,12 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using UserRegistrationApp.Data;
 using UserRegistrationApp.Models;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Cryptography;
-using System.Text;
-using UserRegistrationApp.Components.Pages;
 using Microsoft.Extensions.Logging;
-using System.Linq.Expressions;
-using BCrypt.Net;
+using Microsoft.AspNetCore.Identity;
 
 namespace UserRegistrationApp.Controllers
 {
@@ -15,13 +11,16 @@ namespace UserRegistrationApp.Controllers
     [Route("api/[controller]")]
     public class UserController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+
+        private readonly UserManager<User> _userManager;
+        
+        // private readonly ApplicationDbContext _context;
         // Add logger
         private readonly ILogger<UserController> _logger;
 
-        public UserController(ApplicationDbContext context, ILogger<UserController> logger)
+        public UserController(UserManager<User> userManager, ILogger<UserController> logger)
         {
-            _context = context;
+            _userManager = userManager;
             _logger = logger;
         }
 
@@ -49,36 +48,58 @@ namespace UserRegistrationApp.Controllers
             try
             {
                 // Checking if user already exists
-                if (await _context.Users.AnyAsync(u => u.Email == request.Email))
+                // if (await _context.Users.AnyAsync(u => u.Email == request.Email))
+                // {
+                //     _logger.LogWarning("Registration failed: Email {Email} is already registered.", request.Email);
+                //     return BadRequest("Email is already registered");
+                // }
+
+                var existingUser = await _userManager.FindByEmailAsync(request.Email);
+                if (existingUser != null)
                 {
                     _logger.LogWarning("Registration failed: Email {Email} is already registered.", request.Email);
                     return BadRequest("Email is already registered");
                 }
+
                 // Create User entity
                 var user = new User
                 {
-                    Username = request.Username,
+                    UserName = request.Username,
                     Email = request.Email,
-                    PasswordHash = HashPassword(request.Password),
                     CreatedAt = DateTime.UtcNow
                 };
 
-                _context.Users.Add(user);
-                await _context.SaveChangesAsync();
-                _logger.LogInformation("User {Username} registered successfully.", user.Username);
+                // Use UserManager to create user with password
+                var result = await _userManager.CreateAsync(user, request.Password);
 
-                return Ok(new RegisterResponse
+                if (result.Succeeded)
                 {
-                    Message = "Account created successfully!",
-                    Username = user.Username
-                });
+                    _logger.LogInformation("User {Username} registered successfully with ID: {UserId}", user.UserName, user.Id);
 
+                    return Ok(new RegisterResponse
+                    {
+                        Message = "Account created successfully!",
+                        Username = user.UserName
+                    });
+                }
+                else
+                {
+                    // Log Identity errors
+                    var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                    _logger.LogWarning("Registration failed for {Username}: {Errors}", request.Username, errors);
+                    
+                    return BadRequest(new 
+                    { 
+                        Message = "Registration failed",
+                        Errors = result.Errors.Select(e => e.Description).ToArray()
+                    });
+                }
             }
-            catch (DbUpdateException ex)
-            {
-                _logger.LogError(ex, "Database error occurred while registering user with email: {Email}", request.Email);
-                return StatusCode(500, $"Database error: {ex.InnerException?.Message ?? ex.Message}");
-            }
+            // catch (DbUpdateException ex)
+            // {
+            //     _logger.LogError(ex, "Database error occurred while registering user with email: {Email}", request.Email);
+            //     return StatusCode(500, $"Database error: {ex.InnerException?.Message ?? ex.Message}");
+            // }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "An error occurred while registering user {Username}.", request.Username);
