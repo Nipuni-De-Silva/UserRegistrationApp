@@ -8,6 +8,8 @@
 #### Database: SQLite with Entity Framework Core
 #### Authentication: ASP.NET Core Identity
 
+![Registration Form](Screenshots/ui1.PNG)
+
 # Clone and Run the Project
 
 ## 1. Clone the Repository
