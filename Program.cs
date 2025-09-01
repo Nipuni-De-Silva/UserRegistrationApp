@@ -6,8 +6,9 @@ using Microsoft.Extensions.Logging;
 using UserRegistrationApp.Controllers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using UserRegistrationApp; 
+using UserRegistrationApp;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using UserRegistrationApp.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,6 +33,9 @@ builder.Services.AddRazorComponents().AddInteractiveServerComponents(
     }
 );
 
+// Configure Email Settings
+builder.Services.Configure<UserRegistrationApp.Data.EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddScoped<UserRegistrationApp.Data.IEmailService, UserRegistrationApp.Data.EmailService>();
 
 // Configure Entity Framework with SQLite
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -39,9 +43,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
-builder.Services.AddScoped(sp => new HttpClient 
-{ 
-    BaseAddress = new Uri("http://localhost:5171/") 
+builder.Services.AddScoped(sp => new HttpClient
+{
+    BaseAddress = new Uri("http://localhost:5171/")
 });
 
 // Add CORS for testing (remove or restrict in production)
@@ -57,7 +61,8 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddIdentity<User, IdentityRole>(options =>
 {
-    options.SignIn.RequireConfirmedAccount = false;
+    options.SignIn.RequireConfirmedAccount = true; // Enable email confirmation
+    options.SignIn.RequireConfirmedEmail = true;   // Require confirmed email
     options.Password.RequireDigit = true;
     options.Password.RequireLowercase = false;
     options.Password.RequireUppercase = false;
