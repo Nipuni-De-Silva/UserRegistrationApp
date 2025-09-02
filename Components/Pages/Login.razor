@@ -1,4 +1,4 @@
-@page "/register"
+@page "/login"
 @using UserRegistrationApp.Data
 @using UserRegistrationApp.Data.Models
 @using System.ComponentModel.DataAnnotations
@@ -11,7 +11,7 @@
 @inject NavigationManager Navigation
 @rendermode InteractiveServer
 
-<PageTitle>Create Account - My Note Space</PageTitle>
+<PageTitle>Sign In - My Note Space</PageTitle>
 
 <div class="auth-container">
     <div class="row w-100 justify-content-center d-flex align-items-center" style="min-height: 100vh;">
@@ -21,12 +21,12 @@
                     <div class="text-center mb-4">
                         <img src="my-note-space-logo.png" alt="My Note Space Logo" class="mb-3"
                             style="width: 60px; height: 60px; border-radius: 50%; box-shadow: 0 4px 15px rgba(0,0,0,0.2);" />
-                        <h3 class="mb-2" style="color: #1e3a8a;"><i class="fas fa-user-plus me-2"></i>Create Account
+                        <h3 class="mb-2" style="color: #1e3a8a;"><i class="fas fa-sign-in-alt me-2"></i>Welcome Back
                         </h3>
-                        <p class="text-muted small">Join My Note Space today</p>
+                        <p class="text-muted small">Sign in to your My Note Space account</p>
                     </div>
 
-                    <EditForm Model="@userModel" OnValidSubmit="@HandleValidSubmit" FormName="RegisterForm"
+                    <EditForm Model="@loginModel" OnValidSubmit="@HandleValidSubmit" FormName="LoginForm"
                         OnInvalidSubmit="@HandleInvalidSubmit">
                         <DataAnnotationsValidator />
                         <ValidationSummary class="text-danger" />
@@ -46,37 +46,36 @@
                         }
 
                         <div class="mb-3">
-                            <label for="username" class="form-label">
-                                <i class="fas fa-user me-2"></i>Username
-                            </label>
-                            <InputText id="username" class="form-control" @bind-Value="userModel.Username"
-                                placeholder="Choose a username" />
-                            <ValidationMessage For="@(() => userModel.Username)" class="text-danger small" />
-                        </div>
-
-                        <div class="mb-3">
                             <label for="email" class="form-label">
                                 <i class="fas fa-envelope me-2"></i>Email Address
                             </label>
-                            <InputText id="email" type="email" class="form-control" @bind-Value="userModel.Email"
+                            <InputText id="email" type="email" class="form-control" @bind-Value="loginModel.Email"
                                 placeholder="Enter your email address" />
-                            <ValidationMessage For="@(() => userModel.Email)" class="text-danger small" />
+                            <ValidationMessage For="@(() => loginModel.Email)" class="text-danger small" />
                         </div>
 
-                        <div class="mb-4">
+                        <div class="mb-3">
                             <label for="password" class="form-label">
                                 <i class="fas fa-lock me-2"></i>Password
                             </label>
                             <div class="input-group">
                                 <input id="password" type="@(showPassword ? "text" : "password")" class="form-control"
-                                    @bind="userModel.Password" @bind:event="oninput"
-                                    placeholder="Create a strong password" />
+                                    @bind="loginModel.Password" @bind:event="oninput"
+                                    placeholder="Enter your password" />
                                 <button class="btn btn-outline-secondary" type="button"
                                     @onclick="TogglePasswordVisibility">
                                     <i class="fas @(showPassword ? "fa-eye-slash" : "fa-eye")"></i>
                                 </button>
                             </div>
-                            <ValidationMessage For="@(() => userModel.Password)" class="text-danger small" />
+                            <ValidationMessage For="@(() => loginModel.Password)" class="text-danger small" />
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <InputCheckbox id="rememberMe" class="form-check-input"
+                                @bind-Value="loginModel.RememberMe" />
+                            <label class="form-check-label" for="rememberMe">
+                                Remember me
+                            </label>
                         </div>
 
                         <div class="d-grid mb-3">
@@ -86,12 +85,12 @@
                                 {
                                     <span class="spinner-border spinner-border-sm me-2" role="status"
                                         aria-hidden="true"></span>
-                                    <span>Creating Account...</span>
+                                    <span>Signing In...</span>
                                 }
                                 else
                                 {
-                                    <i class="fas fa-user-plus me-2"></i>
-                                    <span>Create Account</span>
+                                    <i class="fas fa-sign-in-alt me-2"></i>
+                                    <span>Sign In</span>
                                 }
                             </button>
                         </div>
@@ -101,8 +100,9 @@
 
                     <div class="text-center">
                         <p class="mb-0 text-muted small">
-                            Already have an account?
-                            <a href="/login" class="text-decoration-none fw-bold" style="color: #007bff;">Sign In</a>
+                            Don't have an account?
+                            <a href="/register" class="text-decoration-none fw-bold" style="color: #007bff;">Create
+                                Account</a>
                         </p>
                     </div>
                 </div>
@@ -159,6 +159,11 @@
         background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
     }
 
+    .form-check-input:checked {
+        background-color: #3b82f6;
+        border-color: #3b82f6;
+    }
+
     /* Override link color to standard blue */
     a {
         color: #007bff !important;
@@ -166,8 +171,8 @@
 </style>
 
 @code {
-    private ILogger<Register> logger = default!;
-    private RegisterRequest userModel = new();
+    private ILogger<Login> logger = default!;
+    private LoginRequest loginModel = new();
     private string errorMessage = string.Empty;
     private string successMessage = string.Empty;
     private bool showPassword = false;
@@ -175,8 +180,8 @@
 
     protected override void OnInitialized()
     {
-        logger = LoggerFactory.CreateLogger<Register>();
-        logger.LogInformation("Register component initialized.");
+        logger = LoggerFactory.CreateLogger<Login>();
+        logger.LogInformation("Login component initialized.");
     }
 
     private void TogglePasswordVisibility()
@@ -194,54 +199,46 @@
 
         try
         {
-            logger.LogInformation("Submitting registration for user: {Username}", userModel.Username);
+            logger.LogInformation("Attempting login for user: {Email}", loginModel.Email);
 
-            var response = await Http.PostAsJsonAsync("/api/user/register", userModel);
+            var response = await Http.PostAsJsonAsync("/api/user/login", loginModel);
 
             if (response.IsSuccessStatusCode)
             {
-                var result = await response.Content.ReadFromJsonAsync<RegisterResponse>();
+                var result = await response.Content.ReadFromJsonAsync<LoginResponse>();
 
                 if (result?.Success == true)
                 {
-                    successMessage = result.Message ?? "Registration successful! Please check your email to confirm your account.";
-                    userModel = new RegisterRequest(); // Clear the form
+                    successMessage = "Login successful! Redirecting to dashboard...";
+                    logger.LogInformation("Login successful, starting redirect to dashboard");
                     StateHasChanged();
 
-                    // Optional: Redirect to login page after a delay
-                    await Task.Delay(3000);
-                    Navigation.NavigateTo("/login");
+                    // Wait a moment and then navigate
+                    await Task.Delay(1500);
+                    logger.LogInformation("Redirecting to dashboard page");
+                    Navigation.NavigateTo("/dashboard", forceLoad: true);
                 }
+
                 else
                 {
-                    errorMessage = result?.Message ?? "Registration failed. Please try again.";
+                    errorMessage = result?.Message ?? "Login failed. Please check your credentials.";
                 }
             }
+
             else
             {
                 var errorContent = await response.Content.ReadAsStringAsync();
-                logger.LogError("Registration failed with status {StatusCode}: {Error}", response.StatusCode, errorContent);
-
-                // Handle specific error messages
-                if (errorContent.Contains("Email is already registered"))
-                {
-                    errorMessage = "This email address is already registered. Please use a different email or try logging in.";
-                }
-                else if (errorContent.Contains("Username") && errorContent.Contains("already"))
-                {
-                    errorMessage = "This username is already taken. Please choose a different username.";
-                }
-                else
-                {
-                    errorMessage = "Registration failed. Please check your information and try again.";
-                }
+                logger.LogError("Login failed with status {StatusCode}: {Error}", response.StatusCode, errorContent);
+                errorMessage = "Login failed. Please check your email and password.";
             }
         }
+
         catch (Exception ex)
         {
-            logger.LogError(ex, "Exception occurred during registration");
+            logger.LogError(ex, "Exception occurred during login");
             errorMessage = "An error occurred. Please try again later.";
         }
+
         finally
         {
             isSubmitting = false;
@@ -251,7 +248,7 @@
 
     private void HandleInvalidSubmit()
     {
-        logger.LogWarning("Invalid form submission attempted");
+        logger.LogWarning("Invalid login form submission attempted");
     }
 }
 
@@ -267,7 +264,7 @@
     }
 
     .btn-primary {
-        background: linear-gradient(45deg, #0b4f97, #0b4f97);
+        background: linear-gradient(45deg, #007bff, #0056b3);
         border: none;
         transition: all 0.3s ease;
     }
@@ -277,14 +274,8 @@
         box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4);
     }
 
-    .alert-success {
-        background-color: #d4edda !important;
-        border-color: #c3e6cb !important;
-        color: #155724 !important;
-        border-radius: 8px;
-    }
-
-    .alert-success i {
-        color: #28a745 !important;
+    .form-check-input:checked {
+        background-color: #007bff;
+        border-color: #007bff;
     }
 </style>

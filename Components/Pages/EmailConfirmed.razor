@@ -1,0 +1,160 @@
+@page "/email-confirmed"
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.WebUtilities
+@using Microsoft.Extensions.Primitives
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Email Confirmation - My Note Space</PageTitle>
+
+<div class="auth-container">
+    <div class="row w-100 justify-content-center d-flex align-items-center" style="min-height: 100vh;">
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-lg border-0" style="border-radius: 15px;">
+                <div class="card-body p-5 text-center">
+                    <div class="mb-4">
+                        <img src="my-note-space-logo.png" alt="My Note Space Logo" class="mb-3"
+                            style="width: 80px; height: 80px; border-radius: 50%; box-shadow: 0 4px 15px rgba(0,0,0,0.2);" />
+
+                        @if (isSuccess)
+                        {
+                            <div class="mb-3">
+                                <i class="fas fa-check-circle fa-4x text-success"></i>
+                            </div>
+                            <h3 class="mb-3" style="color: #1e3a8a;">
+                                <i class="fas fa-envelope-check me-2"></i>Email Confirmed!
+                            </h3>
+                            <p class="text-muted mb-4">
+                                Your email address has been successfully confirmed.
+                                You can now log in to your My Note Space account and start organizing your notes.
+                            </p>
+                        }
+                        else
+                        {
+                            <div class="mb-3">
+                                <i class="fas fa-times-circle fa-4x text-danger"></i>
+                            </div>
+                            <h3 class="mb-3" style="color: #1e3a8a;">
+                                <i class="fas fa-exclamation-triangle me-2"></i>Confirmation Failed
+                            </h3>
+                            <p class="text-muted mb-4">
+                                @errorMessage
+                                <br><br>
+                                Please try clicking the confirmation link again or contact support if the problem persists.
+                            </p>
+                        }
+                    </div>
+
+                    <div class="d-grid gap-2 mb-3">
+                        @if (isSuccess)
+                        {
+                            <button class="btn btn-primary btn-lg" @onclick="GoToLogin">
+                                <i class="fas fa-sign-in-alt me-2"></i>
+                                Continue to Login
+                            </button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-secondary btn-lg" @onclick="GoToRegister">
+                                <i class="fas fa-user-plus me-2"></i>
+                                Back to Registration
+                            </button>
+                        }
+                    </div>
+
+                    <div class="text-center">
+                        <small class="text-muted">
+                            @if (isSuccess)
+                            {
+                                <span>Welcome to My Note Space! We're excited to have you on board.</span>
+                            }
+                            else
+                            {
+                                <span>Need help? <a href="/contact" class="text-primary">Contact Support</a></span>
+                            }
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .auth-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: linear-gradient(135deg, #e3e3f4 0%, #cddef7 100%);
+        z-index: 1;
+        overflow-y: auto;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        border: none;
+        border-radius: 8px;
+        padding: 12px 24px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+    }
+
+    .btn-secondary {
+        background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+        border: none;
+        border-radius: 8px;
+        padding: 12px 24px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        color: white;
+    }
+
+    .btn-secondary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 15px rgba(107, 114, 128, 0.4);
+        background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+    }
+
+    .card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+    }
+</style>
+
+@code {
+    private bool isSuccess = true;
+    private string errorMessage = "Email confirmation failed. The link may be invalid or expired.";
+
+    protected override void OnInitialized()
+    {
+        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("error", out var error))
+        {
+            isSuccess = false;
+            errorMessage = error.FirstOrDefault() ?? "Email confirmation failed.";
+        }
+        else if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("success", out var success))
+        {
+            isSuccess = true;
+        }
+    }
+
+    private void GoToLogin()
+    {
+        Navigation.NavigateTo("/login");
+    }
+
+    private void GoToRegister()
+    {
+        Navigation.NavigateTo("/register");
+    }
+}

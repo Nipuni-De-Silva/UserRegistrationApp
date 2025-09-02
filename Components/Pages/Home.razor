@@ -1,18 +1,73 @@
 ﻿@page "/"
 
-<PageTitle>Home - User Registration App</PageTitle>
+<PageTitle>Home - My Note Space</PageTitle>
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8 text-center">
-            <h1 class="display-4 mb-4">Welcome to User Registration App</h1>
-            <p class="lead mb-5">A simple and secure way to manage user accounts.</p>
-            
-            <div class="d-grid gap-2 d-md-flex justify-content-md-center">
-                <a href="/register" class="btn btn-primary btn-lg me-md-2">
-                    <i class="fas fa-user-plus me-2"></i>Register
-                </a>
+<div class="home-container">
+    <div class="w-100 px-4 d-flex align-items-center justify-content-center" style="min-height: 100vh;">
+        <div class="text-center">
+            <div class="card shadow-lg border-0 mx-auto"
+                style="border-radius: 15px; backdrop-filter: blur(10px); background: rgba(255, 255, 255, 0.95); max-width: 800px;">
+                <div class="card-body p-5">
+                    <div class="mb-4">
+                        <img src="my-note-space-logo.png" alt="My Note Space Logo" class="mb-3"
+                            style="width: 80px; height: 80px; border-radius: 50%; box-shadow: 0 4px 15px rgba(0,0,0,0.2);" />
+                        <h1 class="display-4 mb-3" style="color: #2c3e50; font-weight: 700;">My Note Space</h1>
+                        <p class="lead mb-4" style="color: #5a6c7d;">Capture your thoughts, organize your ideas, and
+                            never forget what matters most.</p>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <div class="feature-box p-3" style="background: #f8f9fa; border-radius: 10px;">
+                                    <i class="fas fa-pencil-alt fa-2x mb-2" style="color: #007bff;"></i>
+                                    <h6>Write Notes</h6>
+                                    <small class="text-muted">Quick and easy</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="feature-box p-3" style="background: #f8f9fa; border-radius: 10px;">
+                                    <i class="fas fa-folder-open fa-2x mb-2" style="color: #28a745;"></i>
+                                    <h6>Organize</h6>
+                                    <small class="text-muted">Keep everything tidy</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="feature-box p-3" style="background: #f8f9fa; border-radius: 10px;">
+                                    <i class="fas fa-search fa-2x mb-2" style="color: #ffc107;"></i>
+                                    <h6>Find Fast</h6>
+                                    <small class="text-muted">Search instantly</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid justify-content-center">
+                        <a href="/login" class="btn btn-primary btn-lg px-5 py-3"
+                            style="border-radius: 10px; box-shadow: 0 4px 15px rgba(0,123,255,0.3);">
+                            <i class="fas fa-rocket me-2"></i>Get Started
+                        </a>
+                    </div>
+
+                    <div class="mt-4">
+                        <small class="text-muted">Join thousands of users who trust My Note Space with their
+                            ideas</small>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    .home-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: linear-gradient(135deg, #e3e3f4 0%, #cddef7 100%);
+        z-index: 1;
+        overflow-y: auto;
+    }
+</style>

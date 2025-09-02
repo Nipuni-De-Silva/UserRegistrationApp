@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using UserRegistrationApp.Data;
-using UserRegistrationApp.Models;
+using UserRegistrationApp.Data.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Identity;
@@ -13,15 +13,17 @@ namespace UserRegistrationApp.Controllers
     {
 
         private readonly UserManager<User> _userManager;
+        private readonly SignInManager<User> _signInManager;
         private readonly IEmailService _emailService;
 
         // private readonly ApplicationDbContext _context;
         // Add logger
         private readonly ILogger<UserController> _logger;
 
-        public UserController(UserManager<User> userManager, IEmailService emailService, ILogger<UserController> logger)
+        public UserController(UserManager<User> userManager, SignInManager<User> signInManager, IEmailService emailService, ILogger<UserController> logger)
         {
             _userManager = userManager;
+            _signInManager = signInManager;
             _emailService = emailService;
             _logger = logger;
         }
@@ -139,33 +141,152 @@ namespace UserRegistrationApp.Controllers
             if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(token))
             {
                 _logger.LogWarning("Email confirmation failed: Missing userId or token");
-                return BadRequest("Invalid email confirmation link.");
+                return Redirect("/email-confirmed?error=Invalid email confirmation link");
             }
 
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
             {
                 _logger.LogWarning("Email confirmation failed: User not found with ID {UserId}", userId);
-                return BadRequest("Invalid email confirmation link.");
+                return Redirect("/email-confirmed?error=Invalid email confirmation link");
             }
 
             if (user.EmailConfirmed)
             {
                 _logger.LogInformation("Email already confirmed for user {UserId}", userId);
-                return Ok(new { Message = "Email is already confirmed. You can now log in." });
+                return Redirect("/email-confirmed?success=true");
             }
 
             var result = await _userManager.ConfirmEmailAsync(user, token);
             if (result.Succeeded)
             {
                 _logger.LogInformation("Email confirmed successfully for user {UserId}", userId);
-                return Ok(new { Message = "Email confirmed successfully! You can now log in to your account." });
+                return Redirect("/email-confirmed?success=true");
             }
             else
             {
                 var errors = string.Join(", ", result.Errors.Select(e => e.Description));
                 _logger.LogWarning("Email confirmation failed for user {UserId}: {Errors}", userId, errors);
-                return BadRequest(new { Message = "Email confirmation failed. The link may be invalid or expired." });
+                return Redirect("/email-confirmed?error=Email confirmation failed");
+            }
+        }
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login(LoginRequest request)
+        {
+            _logger.LogInformation("Login attempt for email: {Email}", request.Email);
+
+            if (request == null)
+            {
+                _logger.LogWarning("Login request is null.");
+                return BadRequest("Request body is null.");
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
+            {
+                _logger.LogWarning("Login failed: Missing email or password.");
+                return BadRequest("Email and Password are required.");
+            }
+
+            try
+            {
+                // Find user by email
+                var user = await _userManager.FindByEmailAsync(request.Email);
+                if (user == null)
+                {
+                    _logger.LogWarning("Login failed: User not found with email {Email}", request.Email);
+                    return BadRequest(new LoginResponse
+                    {
+                        Success = false,
+                        Message = "Invalid email or password."
+                    });
+                }
+
+                // Check if email is confirmed
+                if (!user.EmailConfirmed)
+                {
+                    _logger.LogWarning("Login failed: Email not confirmed for user {Email}", request.Email);
+                    return BadRequest(new LoginResponse
+                    {
+                        Success = false,
+                        Message = "Please confirm your email address before logging in. Check your inbox for the confirmation email."
+                    });
+                }
+
+                // Attempt to sign in
+                var result = await _signInManager.PasswordSignInAsync(
+                    user.UserName!,
+                    request.Password,
+                    request.RememberMe,
+                    lockoutOnFailure: true); // Enable lockout for security
+
+                if (result.Succeeded)
+                {
+                    _logger.LogInformation("User {Email} logged in successfully", request.Email);
+                    return Ok(new LoginResponse
+                    {
+                        Success = true,
+                        Message = "Login successful!",
+                        Username = user.UserName!,
+                        Email = user.Email!,
+                        EmailConfirmed = user.EmailConfirmed
+                    });
+                }
+                else if (result.IsLockedOut)
+                {
+                    _logger.LogWarning("User {Email} account is locked out", request.Email);
+                    return BadRequest(new LoginResponse
+                    {
+                        Success = false,
+                        Message = "Account is temporarily locked due to multiple failed login attempts. Please try again later."
+                    });
+                }
+                else if (result.RequiresTwoFactor)
+                {
+                    _logger.LogInformation("User {Email} requires two-factor authentication", request.Email);
+                    return BadRequest(new LoginResponse
+                    {
+                        Success = false,
+                        Message = "Two-factor authentication required."
+                    });
+                }
+                else
+                {
+                    _logger.LogWarning("Login failed: Invalid password for user {Email}", request.Email);
+                    return BadRequest(new LoginResponse
+                    {
+                        Success = false,
+                        Message = "Invalid email or password."
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while logging in user {Email}", request.Email);
+                return StatusCode(500, new LoginResponse
+                {
+                    Success = false,
+                    Message = "An error occurred while processing your request."
+                });
+            }
+        }
+
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
+        {
+            _logger.LogInformation("User logout requested");
+
+            try
+            {
+                await _signInManager.SignOutAsync();
+                _logger.LogInformation("User logged out successfully");
+
+                return Ok(new { Success = true, Message = "Logged out successfully." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred during logout");
+                return StatusCode(500, new { Success = false, Message = "An error occurred during logout." });
             }
         }
 

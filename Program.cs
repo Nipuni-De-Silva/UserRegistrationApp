@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using UserRegistrationApp;
 using Microsoft.AspNetCore.Identity.UI.Services;
-using UserRegistrationApp.Models;
+using UserRegistrationApp.Data.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,6 +32,11 @@ builder.Services.AddRazorComponents().AddInteractiveServerComponents(
         // options.DisableFormMapping = true; // Removed: property does not exist on CircuitOptions
     }
 );
+
+// Add authentication state provider for Blazor
+builder.Services.AddScoped<Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider,
+    Microsoft.AspNetCore.Components.Server.ServerAuthenticationStateProvider>();
+builder.Services.AddCascadingAuthenticationState();
 
 // Configure Email Settings
 builder.Services.Configure<UserRegistrationApp.Data.EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
@@ -75,6 +80,19 @@ builder.Services.AddIdentity<User, IdentityRole>(options =>
 })
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
+
+// Configure cookie authentication
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/login";
+    options.LogoutPath = "/logout";
+    options.AccessDeniedPath = "/access-denied";
+    options.ExpireTimeSpan = TimeSpan.FromDays(30); // Remember me duration
+    options.SlidingExpiration = true;
+    options.Cookie.Name = "MyNoteSpaceAuth";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+});
 
 var app = builder.Build();
 

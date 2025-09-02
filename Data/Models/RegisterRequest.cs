@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-namespace UserRegistrationApp.Models
+namespace UserRegistrationApp.Data.Models
 {
     public class RegisterRequest
     {

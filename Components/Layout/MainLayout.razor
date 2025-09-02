@@ -1,12 +1,11 @@
 ﻿@inherits LayoutComponentBase
+@inject NavigationManager Navigation
 
 <div class="page">
     <main>
-        <div class="top-row px-4">
-            <a href="/register">Register</a>
-        </div>
+        
 
-        <article class="content px-4">
+        <article>
             @Body
         </article>
     </main>
@@ -17,3 +16,35 @@
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
 </div>
+
+<style>
+    .top-row {
+        background: transparent !important;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 9999;
+        transition: all 0.3s ease;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .app-name {
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .top-row a:hover {
+        color: white !important;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .content {
+        position: relative;
+        z-index: 1;
+        padding-top: 60px;
+    }
+</style>
