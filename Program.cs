@@ -48,9 +48,16 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
-builder.Services.AddScoped(sp => new HttpClient
+// Configure HttpClient for API calls with authentication
+builder.Services.AddHttpClient("ServerAPI", client =>
 {
-    BaseAddress = new Uri("http://localhost:5171/")
+    client.BaseAddress = new Uri("http://localhost:5171/");
+}).ConfigurePrimaryHttpMessageHandler<HttpClientHandler>();
+
+builder.Services.AddScoped(sp =>
+{
+    var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
+    return httpClientFactory.CreateClient("ServerAPI");
 });
 
 // Add CORS for testing (remove or restrict in production)

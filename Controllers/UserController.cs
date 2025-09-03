@@ -271,6 +271,69 @@ namespace UserRegistrationApp.Controllers
             }
         }
 
+        [HttpPost("blazor-login")]
+        public async Task<IActionResult> BlazorLogin([FromForm] string email, [FromForm] string password, [FromForm] bool rememberMe = false)
+        {
+            _logger.LogInformation("Blazor login attempt for email: {Email}", email);
+
+            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+            {
+                _logger.LogWarning("Blazor login failed: Missing email or password.");
+                return Redirect("/login?error=Missing email or password");
+            }
+
+            try
+            {
+                // Find user by email
+                var user = await _userManager.FindByEmailAsync(email);
+                if (user == null)
+                {
+                    _logger.LogWarning("Blazor login failed: User not found with email {Email}", email);
+                    return Redirect("/login?error=Invalid email or password");
+                }
+
+                // Check if email is confirmed
+                if (!user.EmailConfirmed)
+                {
+                    _logger.LogWarning("Blazor login failed: Email not confirmed for user {Email}", email);
+                    return Redirect("/login?error=Please confirm your email address before logging in");
+                }
+
+                // Attempt to sign in
+                var result = await _signInManager.PasswordSignInAsync(
+                    user.UserName!,
+                    password,
+                    rememberMe,
+                    lockoutOnFailure: true);
+
+                if (result.Succeeded)
+                {
+                    _logger.LogInformation("User {Email} logged in successfully via Blazor", email);
+                    return Redirect("/dashboard");
+                }
+                else if (result.IsLockedOut)
+                {
+                    _logger.LogWarning("User {Email} account is locked out", email);
+                    return Redirect("/login?error=Account is temporarily locked");
+                }
+                else if (result.RequiresTwoFactor)
+                {
+                    _logger.LogInformation("User {Email} requires two-factor authentication", email);
+                    return Redirect("/login?error=Two-factor authentication required");
+                }
+                else
+                {
+                    _logger.LogWarning("Blazor login failed: Invalid password for user {Email}", email);
+                    return Redirect("/login?error=Invalid email or password");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while logging in user via Blazor {Email}", email);
+                return Redirect("/login?error=An error occurred");
+            }
+        }
+
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
         {
