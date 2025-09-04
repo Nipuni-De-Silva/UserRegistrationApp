@@ -8,7 +8,6 @@
 @attribute [Authorize]
 @rendermode InteractiveServer
 @inject ApplicationDbContext DbContext
-@inject IJSRuntime JSRuntime
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
@@ -24,7 +23,8 @@
         <div class="header-center">
             <div class="search-container">
                 <i class="fas fa-search search-icon"></i>
-                <input type="text" class="search-input" placeholder="Search notes..." @bind="searchQuery" @oninput="OnSearchInput" />
+                <input type="text" class="search-input" placeholder="Search notes..." @bind="searchQuery"
+                    @oninput="OnSearchInput" />
                 @if (!string.IsNullOrEmpty(searchQuery))
                 {
                     <button class="search-clear" @onclick="ClearSearch">
@@ -52,7 +52,7 @@
                     <i class="fas fa-sticky-note me-2"></i>All Notes
                     <span class="notes-count">(@filteredNotes.Count)</span>
                 </h6>
-                
+
                 @if (filteredNotes.Any())
                 {
                     @for (int i = 0; i < Math.Min(displayLimit, filteredNotes.Count); i++)
@@ -62,22 +62,27 @@
                             <div class="note-title">@TruncateText(note.Title, 30)</div>
                             <div class="note-preview">@TruncateText(StripHtml(note.Content), 50)</div>
                             <div class="note-meta">
-                                <span class="note-category">@note.Category</span>
+                                <span class="note-category"
+                                    style="background-color: @GetCategoryColor(note.Category)">@note.Category</span>
                                 <span class="note-date">@note.UpdatedAt.ToString("MMM dd")</span>
                             </div>
                         </div>
                     }
-                    
+
                     @if (filteredNotes.Count > 5)
                     {
                         <button class="expand-button" @onclick="ToggleNotesDisplay">
                             @if (showAllNotes)
                             {
-                                <i class="fas fa-chevron-up me-1"></i><span>Show Less</span>
+                                <i class="fas fa-chevron-up me-1"></i>
+
+                                <span>Show Less</span>
                             }
                             else
                             {
-                                <i class="fas fa-chevron-down me-1"></i><span>Show More (@(filteredNotes.Count - 5))</span>
+                                <i class="fas fa-chevron-down me-1"></i>
+
+                                <span>Show More (@(filteredNotes.Count - 5))</span>
                             }
                         </button>
                     }
@@ -93,7 +98,7 @@
                         }
                         else
                         {
-                            <button class="btn btn-sm btn-primary" @onclick="ShowCreateNote">Create your first note</button>
+                            <button class="btn btn-sm btn-primary" @onclick="ShowCreateNote">Create New Note</button>
                         }
                     </div>
                 }
@@ -135,14 +140,15 @@
                     <div class="editor-header">
                         <h4>@(editingNote != null ? "Edit Note" : "Create New Note")</h4>
                         <div class="editor-actions">
-                            <button class="btn btn-success me-2" @onclick="SaveNote" disabled="@isSaving">
+                            <button type="button" class="btn btn-success me-2" @onclick="HandleSaveClick"
+                                disabled="@isSaving">
                                 @if (isSaving)
                                 {
                                     <span class="spinner-border spinner-border-sm me-1"></span>
                                 }
                                 <i class="fas fa-save me-1"></i>Save
                             </button>
-                            <button class="btn btn-secondary" @onclick="CancelEdit">
+                            <button type="button" class="btn btn-secondary" @onclick="HandleCancelClick">
                                 <i class="fas fa-times me-1"></i>Cancel
                             </button>
                         </div>
@@ -151,7 +157,8 @@
                     <div class="editor-body">
                         <div class="form-group mb-3">
                             <label class="form-label">Title</label>
-                            <input type="text" class="form-control" @bind="noteForm.Title" placeholder="Enter note title..." maxlength="200" />
+                            <input type="text" class="form-control" @bind="noteForm.Title" placeholder="Enter note title..."
+                                maxlength="200" />
                         </div>
 
                         <div class="form-group mb-3">
@@ -167,33 +174,15 @@
                                     <option value="Research">Research</option>
                                     <option value="Other">Other</option>
                                 </select>
-                                <small class="form-text text-muted">Select a category or choose "Other" to create a custom one</small>
+                                <small class="form-text text-muted">Select a category or choose "Other" to create a custom
+                                    one</small>
                             </div>
                         </div>
 
                         <div class="form-group mb-3">
                             <label class="form-label">Content</label>
-                            <div class="editor-toolbar">
-                                <button type="button" class="toolbar-btn" @onclick='() => FormatText("bold")' title="Bold">
-                                    <i class="fas fa-bold"></i>
-                                </button>
-                                <button type="button" class="toolbar-btn" @onclick='() => FormatText("italic")' title="Italic">
-                                    <i class="fas fa-italic"></i>
-                                </button>
-                                <button type="button" class="toolbar-btn" @onclick='() => FormatText("underline")' title="Underline">
-                                    <i class="fas fa-underline"></i>
-                                </button>
-                                <div class="toolbar-separator"></div>
-                                <button type="button" class="toolbar-btn" @onclick='() => FormatText("insertUnorderedList")' title="Bullet List">
-                                    <i class="fas fa-list-ul"></i>
-                                </button>
-                                <button type="button" class="toolbar-btn" @onclick='() => FormatText("insertOrderedList")' title="Numbered List">
-                                    <i class="fas fa-list-ol"></i>
-                                </button>
-                            </div>
-                            <div class="editor-content" contenteditable="true" @ref="editorRef" @onblur="OnContentBlur">
-                                @((MarkupString)noteForm.Content)
-                            </div>
+                            <textarea class="form-control content-textarea" @bind="noteForm.Content"
+                                placeholder="Write your note content here..." rows="15"></textarea>
                         </div>
                     </div>
                 </div>
@@ -206,7 +195,8 @@
                         <div>
                             <h3 class="note-viewer-title">@selectedNote.Title</h3>
                             <div class="note-viewer-meta">
-                                <span class="badge bg-primary me-2">@selectedNote.Category</span>
+                                <span class="note-category me-2"
+                                    style="background-color: @GetCategoryColor(selectedNote.Category)">@selectedNote.Category</span>
                                 <small class="text-muted">
                                     Created: @selectedNote.CreatedAt.ToString("MMM dd, yyyy")
                                     @if (selectedNote.UpdatedAt != selectedNote.CreatedAt)
@@ -239,7 +229,7 @@
                         <h3>Welcome to My Note Space</h3>
                         <p class="lead">Select a note from the sidebar to view it, or create a new note to get started.</p>
                         <button class="btn btn-primary btn-lg" @onclick="ShowCreateNote">
-                            <i class="fas fa-plus me-2"></i>Create Your First Note
+                            <i class="fas fa-plus me-2"></i>Create New Note
                         </button>
                     </div>
                 </div>
@@ -255,19 +245,33 @@
     private List<string> categories = new();
     private NoteResponse? selectedNote;
     private CreateNoteRequest noteForm = new() { Category = "General" };
-    private UpdateNoteRequest? editingNote;
+    private NoteResponse? editingNote;
     private string searchQuery = string.Empty;
     private string selectedCategory = string.Empty;
     private bool showCreateForm = false;
     private bool showAllNotes = false;
     private bool isSaving = false;
+    private bool isInitialized = false;
     private int displayLimit => showAllNotes ? filteredNotes.Count : 5;
-    private ElementReference editorRef;
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadNotes();
-        await LoadCategories();
+        if (!isInitialized)
+        {
+            Console.WriteLine("Dashboard initialized, loading data...");
+            await LoadNotes();
+            await LoadCategories();
+            isInitialized = true;
+        }
+    }
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            Console.WriteLine("Dashboard first render completed");
+        }
+        return Task.CompletedTask;
     }
 
     private async Task LoadNotes()
@@ -276,7 +280,7 @@
         {
             var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             var userId = authState.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            
+
             if (string.IsNullOrEmpty(userId))
             {
                 Console.WriteLine("User not authenticated");
@@ -284,19 +288,19 @@
             }
 
             allNotes = await DbContext.Notes
-                .Where(n => n.UserId == userId && !n.IsDeleted)
-                .OrderByDescending(n => n.UpdatedAt)
-                .Select(n => new NoteResponse
-                {
-                    Id = n.Id,
-                    Title = n.Title,
-                    Content = n.Content,
-                    Category = n.Category,
-                    CreatedAt = n.CreatedAt,
-                    UpdatedAt = n.UpdatedAt
-                })
-                .ToListAsync();
-                
+            .Where(n => n.UserId == userId && !n.IsDeleted)
+            .OrderByDescending(n => n.UpdatedAt)
+            .Select(n => new NoteResponse
+            {
+                Id = n.Id,
+                Title = n.Title,
+                Content = n.Content,
+                Category = n.Category,
+                CreatedAt = n.CreatedAt,
+                UpdatedAt = n.UpdatedAt
+            })
+            .ToListAsync();
+
             FilterNotes();
         }
         catch (Exception ex)
@@ -311,17 +315,17 @@
         {
             var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             var userId = authState.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            
+
             if (string.IsNullOrEmpty(userId))
             {
                 return;
             }
 
             categories = await DbContext.Notes
-                .Where(n => n.UserId == userId && !n.IsDeleted)
-                .Select(n => n.Category)
-                .Distinct()
-                .ToListAsync();
+            .Where(n => n.UserId == userId && !n.IsDeleted)
+            .Select(n => n.Category)
+            .Distinct()
+            .ToListAsync();
         }
         catch (Exception ex)
         {
@@ -334,11 +338,11 @@
         filteredNotes = allNotes.Where(note =>
         {
             var matchesSearch = string.IsNullOrEmpty(searchQuery) ||
-                               note.Title.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
-                               note.Content.Contains(searchQuery, StringComparison.OrdinalIgnoreCase);
+    note.Title.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
+    note.Content.Contains(searchQuery, StringComparison.OrdinalIgnoreCase);
 
             var matchesCategory = string.IsNullOrEmpty(selectedCategory) ||
-                                 note.Category == selectedCategory;
+    note.Category == selectedCategory;
 
             return matchesSearch && matchesCategory;
         }).OrderByDescending(n => n.UpdatedAt).ToList();
@@ -396,62 +400,87 @@
                 Content = selectedNote.Content,
                 Category = selectedNote.Category
             };
-            editingNote = new UpdateNoteRequest
-            {
-                Id = selectedNote.Id,
-                Title = selectedNote.Title,
-                Content = selectedNote.Content,
-                Category = selectedNote.Category
-            };
+            editingNote = selectedNote;
             showCreateForm = true;
             StateHasChanged();
         }
     }
 
-    private void CancelEdit()
+    private Task TestEditor()
     {
+        Console.WriteLine("TestEditor - No longer needed without JavaScript");
+        return Task.CompletedTask;
+    }
+
+    private Task HandleFormatClick(string command)
+    {
+        Console.WriteLine($"Format functionality removed - command was: {command}");
+        return Task.CompletedTask;
+    }
+
+    private async Task HandleSaveClick()
+    {
+        Console.WriteLine("Save button clicked!");
+        await SaveNote();
+    }
+
+    private async Task HandleCancelClick()
+    {
+        Console.WriteLine("Cancel button clicked!");
+        await CancelEdit();
+    }
+
+    private async Task CancelEdit()
+    {
+        Console.WriteLine("CancelEdit method called");
         showCreateForm = false;
         editingNote = null;
         noteForm = new CreateNoteRequest { Category = "General" };
-        StateHasChanged();
+        Console.WriteLine("Form cancelled and state updated");
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task SaveNote()
     {
+        Console.WriteLine("SaveNote method called");
+
         if (string.IsNullOrWhiteSpace(noteForm.Title))
         {
-            await JSRuntime.InvokeVoidAsync("alert", "Please enter a title for your note.");
+            Console.WriteLine("Title is empty");
+            // Simple alert without JavaScript
             return;
         }
 
+        if (string.IsNullOrWhiteSpace(noteForm.Content))
+        {
+            Console.WriteLine("Content is empty");
+            // Simple validation without JavaScript
+            return;
+        }
+
+        Console.WriteLine("Setting isSaving to true");
         isSaving = true;
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
 
         try
         {
-            // Get content from editor before saving
-            noteForm.Content = await JSRuntime.InvokeAsync<string>("getEditorContent", editorRef);
-            
-            if (string.IsNullOrWhiteSpace(noteForm.Content))
-            {
-                await JSRuntime.InvokeVoidAsync("alert", "Please enter some content for your note.");
-                return;
-            }
-
             var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             var userId = authState.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            
+            Console.WriteLine($"User ID: {userId}");
+
             if (string.IsNullOrEmpty(userId))
             {
-                await JSRuntime.InvokeVoidAsync("alert", "User not authenticated.");
+                Console.WriteLine("User not authenticated");
                 return;
             }
 
             bool isNewNote = editingNote == null;
             bool success = false;
-            
+            Console.WriteLine($"Is new note: {isNewNote}");
+
             if (editingNote != null)
             {
+                Console.WriteLine("Updating existing note");
                 // Update existing note
                 var existingNote = await DbContext.Notes.FindAsync(editingNote.Id);
                 if (existingNote != null && existingNote.UserId == userId)
@@ -460,13 +489,15 @@
                     existingNote.Content = noteForm.Content;
                     existingNote.Category = noteForm.Category;
                     existingNote.UpdatedAt = DateTime.UtcNow;
-                    
+
                     await DbContext.SaveChangesAsync();
                     success = true;
+                    Console.WriteLine("Note updated successfully");
                 }
             }
             else
             {
+                Console.WriteLine("Creating new note");
                 // Create new note
                 var newNote = new Note
                 {
@@ -478,18 +509,20 @@
                     UpdatedAt = DateTime.UtcNow,
                     IsDeleted = false
                 };
-                
+
                 DbContext.Notes.Add(newNote);
                 await DbContext.SaveChangesAsync();
                 success = true;
+                Console.WriteLine("New note created successfully");
             }
 
             if (success)
             {
+                Console.WriteLine("Reloading notes and categories");
                 // Reload notes to get the updated list
                 await LoadNotes();
                 await LoadCategories();
-                
+
                 // If we created a new note, select it (it should be the most recent one)
                 if (isNewNote && allNotes.Any())
                 {
@@ -497,6 +530,7 @@
                     if (newestNote != null)
                     {
                         selectedNote = newestNote;
+                        Console.WriteLine($"Selected newest note: {newestNote.Title}");
                     }
                 }
                 else if (editingNote != null)
@@ -506,27 +540,28 @@
                     if (updatedNote != null)
                     {
                         selectedNote = updatedNote;
+                        Console.WriteLine($"Selected updated note: {updatedNote.Title}");
                     }
                 }
-                
+
                 // Clear the form after successful save
-                CancelEdit();
-                StateHasChanged();
+                await CancelEdit();
+                Console.WriteLine("Form cleared and state updated");
             }
             else
             {
-                await JSRuntime.InvokeVoidAsync("alert", "Error saving note. Please try again.");
+                Console.WriteLine("Save operation failed");
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error saving note: {ex.Message}");
-            await JSRuntime.InvokeVoidAsync("alert", "An error occurred while saving the note. Please try again.");
+            Console.WriteLine($"Exception in SaveNote: {ex.Message}");
         }
         finally
         {
+            Console.WriteLine("Setting isSaving to false");
             isSaving = false;
-            StateHasChanged();
+            await InvokeAsync(StateHasChanged);
         }
     }
 
@@ -534,14 +569,12 @@
     {
         if (selectedNote == null) return;
 
-        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", $"Are you sure you want to delete '{selectedNote.Title}'?");
-        if (!confirmed) return;
-
+        // Simple confirmation - you could enhance this with a modal later
         try
         {
             var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
             var userId = authState.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            
+
             if (string.IsNullOrEmpty(userId))
             {
                 return;
@@ -552,9 +585,9 @@
             {
                 noteToDelete.IsDeleted = true;
                 noteToDelete.UpdatedAt = DateTime.UtcNow;
-                
+
                 await DbContext.SaveChangesAsync();
-                
+
                 await LoadNotes();
                 await LoadCategories();
                 selectedNote = null;
@@ -564,7 +597,6 @@
         catch (Exception ex)
         {
             Console.WriteLine($"Error deleting note: {ex.Message}");
-            await JSRuntime.InvokeVoidAsync("alert", "An error occurred while deleting the note.");
         }
     }
 
@@ -574,27 +606,11 @@
         StateHasChanged();
     }
 
-    private async Task OnContentBlur()
-    {
-        try
-        {
-            noteForm.Content = await JSRuntime.InvokeAsync<string>("getEditorContent", editorRef);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error getting editor content: {ex.Message}");
-        }
-    }
-
-    private async Task FormatText(string command)
-    {
-        await JSRuntime.InvokeVoidAsync("formatText", command);
-    }
-
-    private async Task Logout()
+    private Task Logout()
     {
         // TODO: Implement logout functionality
-        await JSRuntime.InvokeVoidAsync("alert", "Logout functionality will be implemented in the next step");
+        Console.WriteLine("Logout functionality will be implemented");
+        return Task.CompletedTask;
     }
 
     private string TruncateText(string text, int maxLength)
@@ -608,35 +624,53 @@
     {
         if (string.IsNullOrEmpty(html))
             return string.Empty;
-        
+
         // Simple HTML stripping - in production, use a proper HTML parser
         return System.Text.RegularExpressions.Regex.Replace(html, "<.*?>", string.Empty);
+    }
+
+    private string GetCategoryColor(string category)
+    {
+        var colors = new Dictionary<string, string>
+{
+{ "General", "#3b82f6" }, // Blue
+{ "Work", "#f59e0b" }, // Amber
+{ "Personal", "#10b981" }, // Emerald
+{ "Ideas", "#8b5cf6" }, // Violet
+{ "Tasks", "#ef4444" }, // Red
+{ "Meeting Notes", "#06b6d4" }, // Cyan
+{ "Research", "#84cc16" }, // Lime
+{ "Other", "#6b7280" } // Gray
+};
+
+        return colors.ContainsKey(category) ? colors[category] : "#6b7280"; // Default to gray
     }
 }
 
 <style>
     /* Override MainLayout constraints for full screen dashboard */
-    ::deep html, ::deep body {
+    ::deep html,
+    ::deep body {
         margin: 0;
         padding: 0;
         height: 100vh;
         overflow: hidden;
     }
-    
+
     ::deep .page {
         height: 100vh;
         overflow: hidden;
         margin: 0;
         padding: 0;
     }
-    
+
     ::deep main {
         height: 100vh;
         overflow: hidden;
         margin: 0;
         padding: 0;
     }
-    
+
     ::deep article {
         height: 100vh;
         overflow: hidden;
@@ -755,7 +789,8 @@
         display: flex;
         flex: 1;
         overflow: hidden;
-        height: calc(100vh - 80px); /* Subtract header height */
+        height: calc(100vh - 80px);
+        /* Subtract header height */
     }
 
     .sidebar {
@@ -834,7 +869,6 @@
     }
 
     .note-category {
-        background: #3b82f6;
         color: white;
         padding: 2px 8px;
         border-radius: 12px;
@@ -954,60 +988,26 @@
         margin-bottom: 8px;
     }
 
-    .form-control, .form-select {
+    .form-control,
+    .form-select {
         background: rgba(239, 246, 255, 0.9);
         border: 2px solid #3b82f6;
         border-radius: 8px;
         transition: all 0.3s ease;
     }
 
-    .form-control:focus, .form-select:focus {
+    .form-control:focus,
+    .form-select:focus {
         background: white;
         border-color: #1d4ed8;
         box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
     }
 
-    .editor-toolbar {
-        display: flex;
-        align-items: center;
-        padding: 0.5rem;
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-bottom: none;
-        border-radius: 8px 8px 0 0;
-        gap: 4px;
-    }
-
-    .toolbar-btn {
-        padding: 6px 8px;
-        background: none;
-        border: 1px solid transparent;
-        border-radius: 4px;
-        color: #64748b;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-    .toolbar-btn:hover {
-        background: #e2e8f0;
-        color: #1e40af;
-        border-color: #cbd5e1;
-    }
-
-    .toolbar-separator {
-        width: 1px;
-        height: 20px;
-        background: #e2e8f0;
-        margin: 0 8px;
-    }
-
-    .editor-content {
+    .content-textarea {
         min-height: 300px;
-        padding: 1rem;
-        border: 1px solid #e2e8f0;
-        border-radius: 0 0 8px 8px;
-        background: white;
-        outline: none;
+        resize: vertical;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-size: 14px;
         line-height: 1.6;
     }
 
@@ -1165,15 +1165,3 @@
         }
     }
 </style>
-
-<script>
-    window.getEditorContent = (element) => {
-        return element.innerHTML;
-    };
-
-    window.formatText = (command) => {
-        document.execCommand(command, false, null);
-    };
-</script>
-
-
