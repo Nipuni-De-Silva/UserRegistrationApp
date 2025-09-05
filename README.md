@@ -17,6 +17,17 @@
 ![Login Form](Screenshots/login.PNG)
 ![Dashboard](Screenshots/dashboard-new.PNG)
 
+### Features
+
+1. Note Taking App using ASP.NET Core 9.0 Blazor Server Application with real-time updates
+2. Entity Framework Core with SQLite database for data storage
+3. ASP.NET Core Identity authentication
+4. User registration and login with email confrimation required
+5. Create, edit, and delete notes
+6. Predefined nore categories with unique color coding
+7. Category filtering to organize and find notes quickly
+8. Full-screen responsive dashboard with three panel layout
+
 # Clone and Run the Project
 
 ## 1. Clone the Repository
