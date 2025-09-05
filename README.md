@@ -8,7 +8,14 @@
 #### Database: SQLite with Entity Framework Core
 #### Authentication: ASP.NET Core Identity
 
-![Registration Form](Screenshots/ui1.PNG)
+### Updated the User Registration App to Note Taking App called as My Note Space where user registered users can add new notes, edit existing notes, delete notes and categorize notes
+
+### My Note Space
+
+![Home](Screenshots/home.PNG)
+![Registration Form](Screenshots/register.PNG)
+![Login Form](Screenshots/login.PNG)
+![Dashboard](Screenshots/dashboard-new.PNG)
 
 # Clone and Run the Project
 
